@@ -85,7 +85,7 @@ async function checkUser() {
 function renderItemList(items) {
     const container = document.getElementById('item-display');
     if (!container) return;
-    
+
     // 智慧加總：將相同品項的購買次數合併顯示
     const summaryMap = {};
     items.forEach(item => {
@@ -181,13 +181,13 @@ async function startDraw() {
 
             let resultHtml = '<div style="margin-bottom:15px; text-align:left; color:#888; font-size:0.85rem;">抽獎時間：' + formatDate(new Date()) + '</div>';
             resultHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding: 5px;">';
-            
+
             groupedArray.forEach((r) => {
                 let imgFile = r.imgFile || '';
                 // 智慧補完副檔名 (預設為 .png)
                 if (imgFile && !imgFile.includes('.')) imgFile += '.png';
                 const imgPath = imgFile ? `images/rewards/${imgFile}` : `images/svg/ball_single.svg`;
-                
+
                 resultHtml += `
                     <div style="background: #f8f9fa; border-radius: 12px; padding: 10px; text-align: center; border: 1px solid #eee;">
                         <div style="width: 100%; aspect-ratio: 1/1; margin-bottom: 8px; background:white; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -257,10 +257,40 @@ function showHistory(history) {
     // 格式化時間
     const latestTime = history.length > 0 ? formatDate(history[0].time) : '';
 
-    let html = `<div class="reward-time-header">抽獎時間：${latestTime}</div>`;
+    // 相同商品品項總計 (不分選項)
+    const productSummary = {};
+    history.forEach(h => {
+        if (!productSummary[h.itemName]) {
+            productSummary[h.itemName] = 0;
+        }
+        productSummary[h.itemName]++;
+    });
+
+    // 建立最上方的統計彙整 (採用與抽獎頁一致的卡片樣式)
+    let summaryHtml = `
+        <div class="item-list" style="margin-bottom: 25px;">
+    `;
+
+    Object.keys(productSummary).forEach(name => {
+        summaryHtml += `
+            <div class="item-row">
+                <span>${name}</span>
+                <span>共 <b>${productSummary[name]}</b> 個</span>
+            </div>
+        `;
+    });
+
+    summaryHtml += `
+            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #eee; text-align:right; font-size:0.85rem; color:#888;">
+                最後抽獎時間：${latestTime}
+            </div>
+        </div>
+    `;
+
+    let html = summaryHtml;
     html += '<div class="reward-grid" style="margin-top:10px;">';
 
-    // 相同項目加總統計
+    // 相同項目加總統計 (用於下方詳細網格卡片，保留選項區分)
     const groupedMap = {};
     history.forEach(h => {
         const optionName = h.option || h.result;
@@ -276,7 +306,7 @@ function showHistory(history) {
         let imgFile = h.imgFile || '';
         if (imgFile && !imgFile.includes('.')) imgFile += '.png';
         const imgPath = imgFile ? `images/rewards/${imgFile}` : `images/svg/ball_single.svg`;
-        
+
         const imgClass = imgFile ? 'reward-img' : 'reward-img reward-placeholder';
 
         html += `
