@@ -230,7 +230,7 @@ button:disabled {
 /* 4. 獎勵扭蛋掉落放大動畫 (精確落入右側出物口) */
 #winning-ball {
     position: absolute;
-    bottom: 9%;
+    bottom: 11.5%;
     /* 向上移，防止穿模 */
     left: 71.5%;
     /* 向右移，對齊洞口 */

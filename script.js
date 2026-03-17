@@ -282,7 +282,7 @@ function showHistory(history) {
 
     summaryHtml += `
             <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #eee; text-align:right; font-size:0.85rem; color:#888;">
-                最後抽獎時間：${latestTime}
+                抽出時間：${latestTime}
             </div>
         </div>
     `;
