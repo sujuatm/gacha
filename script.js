@@ -65,7 +65,7 @@ async function checkUser() {
         } else {
             Swal.fire({
                 title: '查無資料',
-                text: data.message,
+                html: data.message.replace(/\n/g, '<br>'),
                 icon: 'error',
                 confirmButtonColor: '#2f3542'
             });
@@ -101,14 +101,14 @@ function renderItemList(items) {
 
 async function startDraw() {
     const btn = document.getElementById('draw-btn');
-    const knob = document.getElementById('knob');
-    const machine = document.getElementById('gacha-machine');
+    const container = document.getElementById('gacha-container');
 
-    if (!btn || !knob || !machine) return;
+    if (!btn || !container) return;
 
     btn.disabled = true;
-    knob.style.transform = 'translateX(-50%) rotate(720deg)';
-    machine.classList.add('shaking');
+    
+    // 執行新版動畫：旋鈕旋轉 + 整機與球體晃動
+    container.classList.add('is-spinning', 'is-loading');
 
     // 抽獎時也顯示 Loading 提示，防止等待焦慮
     let drawQueueTimer = setTimeout(() => {
@@ -140,7 +140,7 @@ async function startDraw() {
         const data = await res.json();
 
         setTimeout(() => {
-            machine.classList.remove('shaking');
+            container.classList.remove('is-spinning', 'is-loading');
             if (data.success) {
                 let resultHtml = '<div style="text-align: left; max-height: 40vh; overflow-y: auto; padding: 10px;">';
                 data.results.forEach((r, i) => {
@@ -168,19 +168,25 @@ async function startDraw() {
                     }
                 });
             } else {
-                Swal.fire('糟糕', data.message, 'error');
+                Swal.fire({
+                    title: '糟糕', 
+                    html: data.message.replace(/\n/g, '<br>'), 
+                    icon: 'error'
+                });
                 btn.disabled = false;
-                knob.style.transform = 'translateX(-50%) rotate(0deg)';
             }
         }, 1500);
     } catch (e) {
         clearTimeout(drawQueueTimer);
         if (Swal.isVisible()) Swal.close();
-        console.error('Draw Error:', e);
-        machine.classList.remove('shaking');
+        console.error('Draw Fetch Error:', e);
+        container.classList.remove('is-spinning', 'is-loading');
         btn.disabled = false;
-        knob.style.transform = 'translateX(-50%) rotate(0deg)';
-        Swal.fire('系統異常', '執行過程中發生阻礙', 'error');
+        Swal.fire({
+            title: '系統異常',
+            text: `執行過程中發生阻礙: ${e.message}`,
+            icon: 'error'
+        });
     }
 }
 

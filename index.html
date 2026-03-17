@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>豪華線上扭蛋機</title>
 
-    <!-- External CSS -->
-    <link rel="stylesheet" href="style.css">
+    <!-- External CSS (Added version to clear cache) -->
+    <link rel="stylesheet" href="style.css?v=20240318">
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -35,13 +35,25 @@
             <button onclick="checkUser()">進入抽獎</button>
         </div>
 
-        <!-- 扭蛋抽取區 -->
         <div id="draw-section" class="hidden">
             <div id="item-display"></div>
-            <div id="gacha-machine">
-                <div class="glass"></div>
-                <div id="knob" class="knob"></div>
+            
+            <div class="gacha-machine" id="gacha-container">
+                <!-- 背景圖層 -->
+                <img src="sng/body_back.svg?v=2" class="layer layer-back">
+                
+                <!-- 扭蛋球圖層 (會晃動) - 使用 balls.svg 呈現彩色滿載效果 -->
+                <img src="sng/balls.svg?v=2" class="layer layer-ball">
+
+                <!-- 前景圖層 -->
+                <img src="sng/body_front.svg?v=2" class="layer layer-front">
+
+                <!-- 旋鈕 (點擊也會觸發) -->
+                <div class="controller-wrapper" onclick="startDraw()">
+                    <img src="sng/controller.svg?v=2" class="gacha-controller" id="gacha-knob">
+                </div>
             </div>
+
             <button id="draw-btn" onclick="startDraw()">一鍵抽完！</button>
         </div>
 
