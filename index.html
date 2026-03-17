@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>豪華線上扭蛋機</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; font-weight: 700; color: var(--secondary-color); font-size: 1.1rem;">載入中請稍候
+        </p>
+    </div>
+
+    <div class="container">
+        <h2>💙Suju ATM群 賭徒專屬💙</h2>
+        <h2>SJ日本超市線上扭蛋機</h2>
+
+        <!-- 驗證身分區 -->
+        <div id="login-section">
+            <div class="input-group">
+                <input type="text" id="orderId" placeholder="訂單編號 (例如：SJ0123456789)">
+                <input type="tel" id="phone" placeholder="輸入手機號碼驗證 (例如：0912345678)">
+            </div>
+            <button onclick="checkUser()">進入抽獎</button>
+        </div>
+
+        <!-- 扭蛋抽取區 -->
+        <div id="draw-section" class="hidden">
+            <div id="item-display"></div>
+            <div id="gacha-machine">
+                <div class="glass"></div>
+                <div id="knob" class="knob"></div>
+            </div>
+            <button id="draw-btn" onclick="startDraw()">一鍵抽完！</button>
+        </div>
+
+        <!-- 歷史紀錄與結果區 -->
+        <div id="history-section" class="hidden">
+            <h3 style="color: var(--secondary-color); font-size: 1.2rem; margin-bottom: 1.5rem;">🎉扭蛋抽選紀錄🎉</h3>
+            <div id="history-list"></div>
+            <button onclick="location.reload()"
+                style="background: var(--secondary-color); margin-top: 25px;">完成，返回首頁</button>
+        </div>
+    </div>
+
+    <!-- External Logic Scripts -->
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
