@@ -29,8 +29,8 @@
         <!-- 驗證身分區 -->
         <div id="login-section">
             <div class="input-group">
-                <input type="text" id="orderId" placeholder="訂單編號 (例如：SJ0123456789)">
-                <input type="tel" id="phone" placeholder="輸入手機號碼驗證 (例如：0912345678)">
+                <input type="text" id="orderId" placeholder="訂單編號 (如：SJ0123456789)">
+                <input type="tel" id="phone" placeholder="輸入手機號碼驗證避免太好玩被盜抽">
             </div>
             <button onclick="checkUser()">進入抽獎</button>
         </div>
@@ -40,21 +40,21 @@
 
             <div class="gacha-machine" id="gacha-container">
                 <!-- 背景圖層 -->
-                <img src="svg/body_back.svg?v=2" class="layer layer-back">
+                <img src="images/svg/body_back.svg?v=2" class="layer layer-back">
 
                 <!-- 扭蛋球圖層 (會晃動) - 使用 balls.svg 呈現彩色滿載效果 -->
-                <img src="svg/balls.svg?v=2" class="layer layer-ball">
+                <img src="images/svg/balls.svg?v=2" class="layer layer-ball">
 
                 <!-- 前景圖層 -->
-                <img src="svg/body_front.svg?v=2" class="layer layer-front">
+                <img src="images/svg/body_front.svg?v=2" class="layer layer-front">
 
                 <!-- 旋鈕 (點擊也會觸發) -->
                 <div class="controller-wrapper" onclick="startDraw()">
-                    <img src="svg/controller.svg?v=2" class="gacha-controller" id="gacha-knob">
+                    <img src="images/svg/controller.svg?v=2" class="gacha-controller" id="gacha-knob">
                 </div>
 
                 <!-- 獎勵扭蛋 (掉落動畫用) -->
-                <img src="svg/ball_single.svg?v=3" id="winning-ball" class="hidden">
+                <img src="images/svg/ball_single.svg?v=3" id="winning-ball" class="hidden">
             </div>
 
             <button id="draw-btn" onclick="startDraw()">一鍵抽完！</button>

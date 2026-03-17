@@ -15,7 +15,7 @@ function showLoading(show, initialMsg = '正在連線...') {
 
         // 如果超過 4 秒還在載入，切換提示文字
         loadingTimer = setTimeout(() => {
-            textEl.innerHTML = '目前排隊欸噗較多 <br><span style="color:var(--accent-color); font-size:0.9rem;">(大約需要等待 10-15 秒，請勿重新整理)</span>';
+            textEl.innerHTML = '目前排隊的賭徒較多 <br><span style="color:var(--accent-color); font-size:0.9rem;">(大約需要等待 10-15 秒，請勿重新整理)</span>';
         }, 4000);
     } else {
         overlay.style.display = 'none';
@@ -106,7 +106,7 @@ async function startDraw() {
     if (!btn || !container) return;
 
     btn.disabled = true;
-    
+
     // 執行新版動畫：旋鈕旋轉 + 整機與球體晃動
     container.classList.add('is-spinning', 'is-loading');
 
@@ -114,7 +114,7 @@ async function startDraw() {
     let drawQueueTimer = setTimeout(() => {
         Swal.fire({
             title: '排隊抽獎中',
-            text: '目前使用欸噗較多，小精靈正在努力工作，需要稍等喔！',
+            text: '目前使用的賭徒較多，小精靈正在努力工作，需要稍等喔！',
             allowOutsideClick: false,
             showConfirmButton: false,
             didOpen: () => {
@@ -151,15 +151,33 @@ async function startDraw() {
         }
 
         container.classList.remove('is-spinning', 'is-loading');
-        
+
         if (data.success) {
             if (winningBall) winningBall.classList.remove('drop-zoom');
-            let resultHtml = '<div style="text-align: left; max-height: 40vh; overflow-y: auto; padding: 10px;">';
-            data.results.forEach((r, i) => {
+            
+            // 相同項目加總邏輯
+            const groupedMap = {};
+            data.results.forEach(r => {
+                const key = `${r.itemName}|${r.result}`;
+                if (!groupedMap[key]) {
+                    groupedMap[key] = { ...r, count: 0 };
+                }
+                groupedMap[key].count++;
+            });
+            const groupedArray = Object.values(groupedMap);
+
+            let resultHtml = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding: 5px;">';
+            groupedArray.forEach((r) => {
+                const imgPath = r.imgFile ? `images/rewards/${r.imgFile}` : `images/svg/ball_single.svg`;
                 resultHtml += `
-                    <div style="margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
-                        <div style="font-size: 0.8rem; color: #888;">第 ${i + 1} 抽 - ${r.itemName}</div>
-                        <div style="font-weight: 700; color: #ff4757; font-size: 1.1rem;">👉 ${r.result}</div>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 10px; text-align: center; border: 1px solid #eee;">
+                        <div style="width: 100%; aspect-ratio: 1/1; margin-bottom: 8px; background:white; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                            <img src="${imgPath}" style="width:100%; height:100%; object-fit:cover;" 
+                                 onerror="this.src='images/svg/ball_single.svg'; this.style.opacity='0.3';">
+                        </div>
+                        <div style="font-size: 0.85rem; font-weight:700; color:#2f3542; word-break:break-all;">
+                            ${r.itemName} ${r.result} <br> <span style="color:#ff4757;">${r.count}個</span>
+                        </div>
                     </div>`;
             });
             resultHtml += '</div>';
@@ -168,11 +186,10 @@ async function startDraw() {
                 title: '🎊抽獎出爐🎊',
                 html: resultHtml,
                 icon: 'success',
-                confirmButtonText: '查看所有歷史結果',
+                confirmButtonText: '查看抽獎紀錄',
                 confirmButtonColor: '#ff4757',
                 allowOutsideClick: false
             }).then(() => {
-                // 如果後台有回傳最新歷史，直接顯示，避免再次連網連到「連線失敗」
                 if (data.history) {
                     showHistory(data.history);
                 } else {
@@ -182,8 +199,8 @@ async function startDraw() {
             });
         } else {
             Swal.fire({
-                title: '糟糕', 
-                html: data.message.replace(/\n/g, '<br>'), 
+                title: '糟糕',
+                html: data.message.replace(/\n/g, '<br>'),
                 icon: 'error'
             });
             btn.disabled = false;
@@ -202,6 +219,7 @@ async function startDraw() {
     }
 }
 
+// 更新結果顯示區域 (改為圖片網格版)
 function showHistory(history) {
     const drawSection = document.getElementById('draw-section');
     const historySection = document.getElementById('history-section');
@@ -217,29 +235,56 @@ function showHistory(history) {
         return;
     }
 
-    list.innerHTML = ''; // Clear existing content
-    history.slice().reverse().forEach(h => {
-        const dateObj = new Date(h.time);
-        let timeStr = '剛剛';
-        
-        if (!isNaN(dateObj.getTime())) {
-            // 顯示日期 + 時間 (例如: 03/18 01:25)
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const date = String(dateObj.getDate()).padStart(2, '0');
-            const hours = String(dateObj.getHours()).padStart(2, '0');
-            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-            timeStr = `${month}/${date} ${hours}:${minutes}`;
-        }
+    // 格式化時間 (僅顯示一次在最上方)
+    const latestTime = history.length > 0 ? formatDate(history[0].time) : '';
 
-        const card = document.createElement('div');
-        card.className = 'history-card';
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                <span style="font-weight: 700; color: #2f3542;">${h.itemName}</span>
-                <span style="font-size: 0.75rem; color: #a4b0be;">${timeStr}</span>
-            </div>
-            <div style="font-weight: 700; color: var(--primary-color); font-size: 1.1rem;">${h.option || h.result}</div>
-        `;
-        list.appendChild(card);
+    let html = `<div class="reward-time-header">最後更新：${latestTime}</div>`;
+    html += '<div class="reward-grid">';
+
+    // 相同項目加總邏輯
+    const groupedMap = {};
+    history.forEach(h => {
+        const optionName = h.option || h.result;
+        const key = `${h.itemName}|${optionName}`;
+        if (!groupedMap[key]) {
+            groupedMap[key] = { ...h, optionName: optionName, count: 0 };
+        }
+        groupedMap[key].count++;
     });
+    const groupedHistory = Object.values(groupedMap);
+
+    groupedHistory.forEach(h => {
+        // 如果有指定圖片檔名，路徑設為 images/rewards/，否則顯示通用扭蛋佔位符
+        const imgPath = h.imgFile
+            ? `images/rewards/${h.imgFile}`
+            : `images/svg/ball_single.svg`;
+
+        const imgClass = h.imgFile ? 'reward-img' : 'reward-img reward-placeholder';
+
+        html += `
+            <div class="reward-card">
+                <div class="reward-img-container">
+                    <img src="${imgPath}" class="${imgClass}" loading="lazy" 
+                         onerror="this.src='images/svg/ball_single.svg'; this.classList.add('reward-placeholder');">
+                </div>
+                <div class="reward-name">
+                    ${h.itemName} ${h.optionName} <br> <span style="color:#ff4757;">${h.count}個</span>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    list.innerHTML = html;
+}
+
+// 輔助函式：日期格式化 (MM/DD HH:mm)
+function formatDate(isoString) {
+    const dateObj = new Date(isoString);
+    if (isNaN(dateObj.getTime())) return isoString;
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const date = String(dateObj.getDate()).padStart(2, '0');
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    return `${month}/${date} ${hours}:${minutes}`;
 }

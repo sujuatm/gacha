@@ -98,7 +98,8 @@ button:disabled {
 
 .gacha-machine {
     position: relative;
-    width: 350px; /* 精確匹配參考圖比例 */
+    width: 350px;
+    /* 精確匹配參考圖比例 */
     height: 585px;
     margin: 1.5rem auto;
 }
@@ -113,23 +114,34 @@ button:disabled {
 }
 
 /* 圖層順序與物理位置設定 */
-.layer-back  { z-index: 10; } /* body_back.svg */
-.layer-ball { 
-    z-index: 20; 
-    top: 8%; /* 往下移動，讓球落在展示箱底部 */
-} 
-.layer-front { z-index: 30; pointer-events: none; } /* body_front.svg */
+.layer-back {
+    z-index: 10;
+}
+
+/* body_back.svg */
+.layer-ball {
+    z-index: 20;
+    top: 8%;
+    /* 往下移動，讓球落在展示箱底部 */
+}
+
+.layer-front {
+    z-index: 30;
+    pointer-events: none;
+}
+
+/* body_front.svg */
 
 /* 旋鈕定位與大小修正 */
 .controller-wrapper {
     position: absolute;
     z-index: 40;
-    left: 14.5%; 
+    left: 14.5%;
     top: 62%;
     width: 110px;
     height: 110px;
     cursor: pointer;
-    transform: translate(0, 0); 
+    transform: translate(0, 0);
 }
 
 .gacha-controller {
@@ -143,9 +155,20 @@ button:disabled {
 
 /* 1. 旋鈕旋轉 (擬真間歇旋轉：轉1秒，停0.5秒) */
 @keyframes spin-crank {
-    0% { transform: rotate(0deg); }
-    67% { transform: rotate(360deg); } /* 前 1秒 (約67%) 轉一圈 */
-    100% { transform: rotate(360deg); } /* 後 0.5秒 (約33%) 停住 */
+    0% {
+        transform: rotate(0deg);
+    }
+
+    67% {
+        transform: rotate(360deg);
+    }
+
+    /* 前 1秒 (約67%) 轉一圈 */
+    100% {
+        transform: rotate(360deg);
+    }
+
+    /* 後 0.5秒 (約33%) 停住 */
 }
 
 .is-spinning .gacha-controller {
@@ -154,9 +177,24 @@ button:disabled {
 
 /* 2. 扭蛋球同步晃動 (僅在轉動時晃) */
 @keyframes shake-ball-sync {
-    0%, 67%, 100% { transform: translate(0, 0); }
-    10%, 30%, 50% { transform: translate(-3px, 3px); }
-    20%, 40%, 60% { transform: translate(3px, -3px); }
+
+    0%,
+    67%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    10%,
+    30%,
+    50% {
+        transform: translate(-3px, 3px);
+    }
+
+    20%,
+    40%,
+    60% {
+        transform: translate(3px, -3px);
+    }
 }
 
 .is-loading .layer-ball {
@@ -165,9 +203,24 @@ button:disabled {
 
 /* 3. 整機同步震動 (僅在轉動時震) */
 @keyframes machine-shake-sync {
-    0%, 67%, 100% { transform: translate(0, 0) rotate(0deg); }
-    5%, 25%, 45% { transform: translate(2px, 1px) rotate(0.5deg); }
-    15%, 35%, 55% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+
+    0%,
+    67%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    5%,
+    25%,
+    45% {
+        transform: translate(2px, 1px) rotate(0.5deg);
+    }
+
+    15%,
+    35%,
+    55% {
+        transform: translate(-1px, -2px) rotate(-0.5deg);
+    }
 }
 
 .is-loading {
@@ -177,10 +230,14 @@ button:disabled {
 /* 4. 獎勵扭蛋掉落放大動畫 (精確落入右側出物口) */
 #winning-ball {
     position: absolute;
-    bottom: 12%; /* 向上移，防止穿模 */
-    left: 71.5%; /* 向右移，對齊洞口 */
-    width: 70px;  /* 縮小一點點 */
-    z-index: 25; /* 層級設定在 body_front (30) 之後 */
+    bottom: 9%;
+    /* 向上移，防止穿模 */
+    left: 71.5%;
+    /* 向右移，對齊洞口 */
+    width: 70px;
+    /* 縮小一點點 */
+    z-index: 25;
+    /* 層級設定在 body_front (30) 之後 */
     pointer-events: none;
     transform: translate(-50%, 0);
     display: none;
@@ -196,16 +253,18 @@ button:disabled {
         opacity: 0;
         transform: translate(-50%, -120px) scale(0.6) rotate(-20deg);
     }
+
     30% {
         opacity: 1;
     }
+
     100% {
         opacity: 1;
         transform: translate(-50%, 0) scale(1) rotate(0deg);
     }
 }
 
-/* 項目清單 */
+/* 項目清單 (擁有項目卡片) */
 .item-list {
     text-align: left;
     background: #ffffff;
@@ -223,11 +282,74 @@ button:disabled {
     margin-bottom: 8px;
     font-size: 1rem;
     padding: 4px 0;
+    color: var(--secondary-color);
 }
 
 .item-row b {
     color: var(--primary-color);
     font-size: 1.2rem;
+}
+
+/* 獎勵網格佈局 (一列兩個) */
+.reward-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 1.5rem 0;
+}
+
+.reward-card {
+    background: #fff;
+    border: 2px solid #f1f2f6;
+    border-radius: 16px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease;
+}
+
+.reward-card:hover {
+    transform: translateY(-3px);
+}
+
+.reward-img-container {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #f8fbff;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reward-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.reward-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    word-break: break-all;
+}
+
+.reward-time-header {
+    font-size: 0.85rem;
+    color: #a4b0be;
+    margin-bottom: 1rem;
+    text-align: right;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+}
+
+/* 確保通用扭蛋圖佔位符樣式 */
+.reward-placeholder {
+    width: 60%;
+    opacity: 0.3;
 }
 
 /* 移除舊版動畫 */
