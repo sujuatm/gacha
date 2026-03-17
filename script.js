@@ -85,13 +85,26 @@ async function checkUser() {
 function renderItemList(items) {
     const container = document.getElementById('item-display');
     if (!container) return;
-    let html = '<div class="item-list"><h4 style="margin-top:0;">您目前擁有的項目：</h4>';
+    
+    // 智慧加總：將相同品項的購買次數合併顯示
+    const summaryMap = {};
     items.forEach(item => {
+        if (!summaryMap[item.itemName]) {
+            summaryMap[item.itemName] = { total: 0, drawn: 0, remaining: 0 };
+        }
+        summaryMap[item.itemName].total += item.total;
+        summaryMap[item.itemName].drawn += item.drawn;
+        summaryMap[item.itemName].remaining += item.remaining;
+    });
+
+    let html = '<div class="item-list"><h4 style="margin-top:0;">您目前擁有的項目總計：</h4>';
+    Object.keys(summaryMap).forEach(name => {
+        const item = summaryMap[name];
         const status = item.remaining > 0
             ? `<span>剩餘 <b>${item.remaining}</b> 次</span>`
             : `<span style="color:#a4b0be; text-decoration:line-through;">已全數抽完</span>`;
         html += `<div class="item-row">
-            <span>${item.itemName}</span>
+            <span>${name}</span>
             ${status}
         </div>`;
     });
@@ -154,8 +167,8 @@ async function startDraw() {
 
         if (data.success) {
             if (winningBall) winningBall.classList.remove('drop-zoom');
-            
-            // 相同項目加總邏輯
+
+            // 獎項相同加總統計
             const groupedMap = {};
             data.results.forEach(r => {
                 const key = `${r.itemName}|${r.result}`;
@@ -166,9 +179,15 @@ async function startDraw() {
             });
             const groupedArray = Object.values(groupedMap);
 
-            let resultHtml = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding: 5px;">';
+            let resultHtml = '<div style="margin-bottom:15px; text-align:left; color:#888; font-size:0.85rem;">抽獎時間：' + formatDate(new Date()) + '</div>';
+            resultHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding: 5px;">';
+            
             groupedArray.forEach((r) => {
-                const imgPath = r.imgFile ? `images/rewards/${r.imgFile}` : `images/svg/ball_single.svg`;
+                let imgFile = r.imgFile || '';
+                // 智慧補完副檔名 (預設為 .png)
+                if (imgFile && !imgFile.includes('.')) imgFile += '.png';
+                const imgPath = imgFile ? `images/rewards/${imgFile}` : `images/svg/ball_single.svg`;
+                
                 resultHtml += `
                     <div style="background: #f8f9fa; border-radius: 12px; padding: 10px; text-align: center; border: 1px solid #eee;">
                         <div style="width: 100%; aspect-ratio: 1/1; margin-bottom: 8px; background:white; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
@@ -235,13 +254,13 @@ function showHistory(history) {
         return;
     }
 
-    // 格式化時間 (僅顯示一次在最上方)
+    // 格式化時間
     const latestTime = history.length > 0 ? formatDate(history[0].time) : '';
 
-    let html = `<div class="reward-time-header">最後更新：${latestTime}</div>`;
-    html += '<div class="reward-grid">';
+    let html = `<div class="reward-time-header">抽獎時間：${latestTime}</div>`;
+    html += '<div class="reward-grid" style="margin-top:10px;">';
 
-    // 相同項目加總邏輯
+    // 相同項目加總統計
     const groupedMap = {};
     history.forEach(h => {
         const optionName = h.option || h.result;
@@ -254,12 +273,11 @@ function showHistory(history) {
     const groupedHistory = Object.values(groupedMap);
 
     groupedHistory.forEach(h => {
-        // 如果有指定圖片檔名，路徑設為 images/rewards/，否則顯示通用扭蛋佔位符
-        const imgPath = h.imgFile
-            ? `images/rewards/${h.imgFile}`
-            : `images/svg/ball_single.svg`;
-
-        const imgClass = h.imgFile ? 'reward-img' : 'reward-img reward-placeholder';
+        let imgFile = h.imgFile || '';
+        if (imgFile && !imgFile.includes('.')) imgFile += '.png';
+        const imgPath = imgFile ? `images/rewards/${imgFile}` : `images/svg/ball_single.svg`;
+        
+        const imgClass = imgFile ? 'reward-img' : 'reward-img reward-placeholder';
 
         html += `
             <div class="reward-card">
