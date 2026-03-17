@@ -7,7 +7,7 @@
     <title>豪華線上扭蛋機</title>
 
     <!-- External CSS (Added version to clear cache) -->
-    <link rel="stylesheet" href="style.css?v=20240318">
+    <link rel="stylesheet" href="style.css?v=20240318-2">
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -52,6 +52,9 @@
                 <div class="controller-wrapper" onclick="startDraw()">
                     <img src="sng/controller.svg?v=2" class="gacha-controller" id="gacha-knob">
                 </div>
+
+                <!-- 獎勵扭蛋 (掉落動畫用) -->
+                <img src="sng/ball_single.svg?v=3" id="winning-ball" class="hidden">
             </div>
 
             <button id="draw-btn" onclick="startDraw()">一鍵抽完！</button>

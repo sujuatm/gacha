@@ -139,43 +139,55 @@ async function startDraw() {
 
         const data = await res.json();
 
-        setTimeout(() => {
-            container.classList.remove('is-spinning', 'is-loading');
-            if (data.success) {
-                let resultHtml = '<div style="text-align: left; max-height: 40vh; overflow-y: auto; padding: 10px;">';
-                data.results.forEach((r, i) => {
-                    resultHtml += `
+        // 確保至少旋轉 2 秒
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // 觸發「掉落放大」動畫
+        const winningBall = document.getElementById('winning-ball');
+        if (winningBall) {
+            winningBall.classList.add('drop-zoom');
+            // 等待掉落動畫完成 (0.8s 動畫 + 一點緩衝)
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        container.classList.remove('is-spinning', 'is-loading');
+        
+        if (data.success) {
+            if (winningBall) winningBall.classList.remove('drop-zoom');
+            let resultHtml = '<div style="text-align: left; max-height: 40vh; overflow-y: auto; padding: 10px;">';
+            data.results.forEach((r, i) => {
+                resultHtml += `
                     <div style="margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
                         <div style="font-size: 0.8rem; color: #888;">第 ${i + 1} 抽 - ${r.itemName}</div>
                         <div style="font-weight: 700; color: #ff4757; font-size: 1.1rem;">👉 ${r.result}</div>
                     </div>`;
-                });
-                resultHtml += '</div>';
+            });
+            resultHtml += '</div>';
 
-                Swal.fire({
-                    title: '🎊抽獎出爐🎊',
-                    html: resultHtml,
-                    icon: 'success',
-                    confirmButtonText: '查看所有歷史結果',
-                    confirmButtonColor: '#ff4757',
-                    allowOutsideClick: false
-                }).then(() => {
-                    // 如果後台有回傳最新歷史，直接顯示，避免再次連網連到「連線失敗」
-                    if (data.history) {
-                        showHistory(data.history);
-                    } else {
-                        checkUser();
-                    }
-                });
-            } else {
-                Swal.fire({
-                    title: '糟糕', 
-                    html: data.message.replace(/\n/g, '<br>'), 
-                    icon: 'error'
-                });
+            Swal.fire({
+                title: '🎊抽獎出爐🎊',
+                html: resultHtml,
+                icon: 'success',
+                confirmButtonText: '查看所有歷史結果',
+                confirmButtonColor: '#ff4757',
+                allowOutsideClick: false
+            }).then(() => {
+                // 如果後台有回傳最新歷史，直接顯示，避免再次連網連到「連線失敗」
+                if (data.history) {
+                    showHistory(data.history);
+                } else {
+                    checkUser();
+                }
                 btn.disabled = false;
-            }
-        }, 1500);
+            });
+        } else {
+            Swal.fire({
+                title: '糟糕', 
+                html: data.message.replace(/\n/g, '<br>'), 
+                icon: 'error'
+            });
+            btn.disabled = false;
+        }
     } catch (e) {
         clearTimeout(drawQueueTimer);
         if (Swal.isVisible()) Swal.close();
@@ -205,19 +217,29 @@ function showHistory(history) {
         return;
     }
 
-    list.innerHTML = history.slice().reverse().map(h => {
+    list.innerHTML = ''; // Clear existing content
+    history.slice().reverse().forEach(h => {
         const dateObj = new Date(h.time);
-        const timeStr = isNaN(dateObj.getTime()) ? '剛剛' : dateObj.toLocaleTimeString();
-        return `
-            <div class="history-card">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="font-weight: 700;">${h.itemName}</span>
-                    <span style="font-size: 0.8rem; color: #a4b0be;">${timeStr}</span>
-                </div>
-                <div style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">
-                    ${h.option || h.result}
-                </div>
+        let timeStr = '剛剛';
+        
+        if (!isNaN(dateObj.getTime())) {
+            // 顯示日期 + 時間 (例如: 03/18 01:25)
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const date = String(dateObj.getDate()).padStart(2, '0');
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            timeStr = `${month}/${date} ${hours}:${minutes}`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                <span style="font-weight: 700; color: #2f3542;">${h.itemName}</span>
+                <span style="font-size: 0.75rem; color: #a4b0be;">${timeStr}</span>
             </div>
+            <div style="font-weight: 700; color: var(--primary-color); font-size: 1.1rem;">${h.option || h.result}</div>
         `;
-    }).join('');
+        list.appendChild(card);
+    });
 }

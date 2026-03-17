@@ -112,9 +112,12 @@ button:disabled {
     object-fit: contain;
 }
 
-/* 圖層順序設定 */
+/* 圖層順序與物理位置設定 */
 .layer-back  { z-index: 10; } /* body_back.svg */
-.layer-ball  { z-index: 20; } /* ball.svg (或 balls.svg) */
+.layer-ball { 
+    z-index: 20; 
+    top: 8%; /* 往下移動，讓球落在展示箱底部 */
+} 
 .layer-front { z-index: 30; pointer-events: none; } /* body_front.svg */
 
 /* 旋鈕定位與大小修正 */
@@ -138,38 +141,68 @@ button:disabled {
 
 /* --- 動畫定義 --- */
 
-/* 1. 旋鈕旋轉 */
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+/* 1. 旋鈕旋轉 (擬真間歇旋轉：轉1秒，停0.5秒) */
+@keyframes spin-crank {
+    0% { transform: rotate(0deg); }
+    67% { transform: rotate(360deg); } /* 前 1秒 (約67%) 轉一圈 */
+    100% { transform: rotate(360deg); } /* 後 0.5秒 (約33%) 停住 */
 }
 
 .is-spinning .gacha-controller {
-    animation: spin 1s ease-in-out forwards;
+    animation: spin-crank 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
-/* 2. 扭蛋球晃動 */
-@keyframes shake-ball {
-    0% { transform: translate(0, 0); }
-    25% { transform: translate(-2px, 2px); }
-    50% { transform: translate(2px, -2px); }
-    75% { transform: translate(-2px, -2px); }
-    100% { transform: translate(0, 0); }
+/* 2. 扭蛋球同步晃動 (僅在轉動時晃) */
+@keyframes shake-ball-sync {
+    0%, 67%, 100% { transform: translate(0, 0); }
+    10%, 30%, 50% { transform: translate(-3px, 3px); }
+    20%, 40%, 60% { transform: translate(3px, -3px); }
 }
 
 .is-loading .layer-ball {
-    animation: shake-ball 0.12s infinite;
+    animation: shake-ball-sync 1.5s ease-in-out infinite;
 }
 
-/* 3. 整機震動 (增強感) */
+/* 3. 整機同步震動 (僅在轉動時震) */
+@keyframes machine-shake-sync {
+    0%, 67%, 100% { transform: translate(0, 0) rotate(0deg); }
+    5%, 25%, 45% { transform: translate(2px, 1px) rotate(0.5deg); }
+    15%, 35%, 55% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+}
+
 .is-loading {
-    animation: machine-shake 0.1s infinite;
+    animation: machine-shake-sync 1.5s ease-in-out infinite;
 }
 
-@keyframes machine-shake {
-    0% { transform: translate(2px, 1px) rotate(0deg); }
-    50% { transform: translate(-1px, -2px) rotate(-1deg); }
-    100% { transform: translate(1px, 2px) rotate(1deg); }
+/* 4. 獎勵扭蛋掉落放大動畫 (精確落入右側出物口) */
+#winning-ball {
+    position: absolute;
+    bottom: 12%; /* 向上移，防止穿模 */
+    left: 71.5%; /* 向右移，對齊洞口 */
+    width: 70px;  /* 縮小一點點 */
+    z-index: 25; /* 層級設定在 body_front (30) 之後 */
+    pointer-events: none;
+    transform: translate(-50%, 0);
+    display: none;
+}
+
+#winning-ball.drop-zoom {
+    display: block !important;
+    animation: drop-into-box 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes drop-into-box {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -120px) scale(0.6) rotate(-20deg);
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1) rotate(0deg);
+    }
 }
 
 /* 項目清單 */
