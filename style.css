@@ -211,6 +211,15 @@ button:disabled {
     backdrop-filter: blur(4px);
 }
 
+#loading-overlay p {
+    margin-top: 20px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+    text-align: center;
+    line-height: 1.5;
+}
+
 .spinner {
     width: 60px;
     height: 60px;

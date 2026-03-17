@@ -1,7 +1,26 @@
 let currentUser = { orderId: '', phone: '' };
 
-function showLoading(show) {
-    document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+let loadingTimer = null;
+
+function showLoading(show, initialMsg = '正在連線...') {
+    const overlay = document.getElementById('loading-overlay');
+    const textEl = overlay.querySelector('p');
+
+    // 清除舊的定時器
+    if (loadingTimer) clearTimeout(loadingTimer);
+
+    if (show) {
+        overlay.style.display = 'flex';
+        textEl.innerText = initialMsg;
+
+        // 如果超過 4 秒還在載入，切換提示文字
+        loadingTimer = setTimeout(() => {
+            textEl.innerHTML = '目前排隊欸噗較多 <br><span style="color:var(--accent-color); font-size:0.9rem;">(大約需要等待 10-15 秒，請勿重新整理)</span>';
+        }, 4000);
+    } else {
+        overlay.style.display = 'none';
+        textEl.innerText = '正在連線...';
+    }
 }
 
 async function checkUser() {
@@ -10,8 +29,8 @@ async function checkUser() {
 
     if (!orderId || !phone) {
         return Swal.fire({
-            title: '填寫不完整',
-            text: '請輸入訂單編號與手機號碼',
+            title: '哎呀！',
+            text: '請填寫完整的訂單資料喔',
             icon: 'warning',
             confirmButtonColor: '#ff4757'
         });
@@ -19,28 +38,18 @@ async function checkUser() {
 
     // 檢查 CONFIG 是否有載入
     if (typeof CONFIG === 'undefined' || !CONFIG.API_URL) {
-        console.error('CONFIG is missing or API_URL is empty!');
-        return Swal.fire('配置錯誤', '找不到 API 設定，請檢查 config.js 是否存在。', 'error');
+        return Swal.fire('配置錯誤', '找不到 API 設定', 'error');
     }
 
-    showLoading(true);
-    console.log('Sending check request to:', CONFIG.API_URL);
+    showLoading(true, '驗證中請稍等');
 
     try {
-        const response = await fetch(CONFIG.API_URL, {
+        const res = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            mode: 'cors', // 明確指定 CORS
             body: JSON.stringify({ action: 'check', orderId, phone })
         });
 
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Received data:', data);
+        const data = await res.json();
         showLoading(false);
 
         if (data.success) {
@@ -55,7 +64,7 @@ async function checkUser() {
             }
         } else {
             Swal.fire({
-                title: '驗證失敗',
+                title: '查無資料',
                 text: data.message,
                 icon: 'error',
                 confirmButtonColor: '#2f3542'
@@ -64,14 +73,10 @@ async function checkUser() {
     } catch (e) {
         showLoading(false);
         console.error('Detailed API Error:', e);
-        
-        let errorMsg = '請確認以下幾點：\n1. 後台 GAS 是否已部署為「新版本」\n2. 存取權限是否設為「所有人 (Anyone)」\n3. 網址是否正確貼在 config.js';
-        
         Swal.fire({
             title: '連線失敗',
-            text: errorMsg,
+            text: `無法取得資料，請確認後台 API 是否正確部署為「新版本」且權限設為「所有人」。\n(錯誤：${e.message})`,
             icon: 'error',
-            footer: `<small>錯誤訊息: ${e.message}</small>`,
             confirmButtonColor: '#ff4757'
         });
     }
@@ -82,8 +87,8 @@ function renderItemList(items) {
     if (!container) return;
     let html = '<div class="item-list"><h4 style="margin-top:0;">您目前擁有的項目：</h4>';
     items.forEach(item => {
-        const status = item.remaining > 0 
-            ? `<span>剩餘 <b>${item.remaining}</b> 次</span>` 
+        const status = item.remaining > 0
+            ? `<span>剩餘 <b>${item.remaining}</b> 次</span>`
             : `<span style="color:#a4b0be; text-decoration:line-through;">已全數抽完</span>`;
         html += `<div class="item-row">
             <span>${item.itemName}</span>
@@ -105,14 +110,33 @@ async function startDraw() {
     knob.style.transform = 'translateX(-50%) rotate(720deg)';
     machine.classList.add('shaking');
 
+    // 抽獎時也顯示 Loading 提示，防止等待焦慮
+    let drawQueueTimer = setTimeout(() => {
+        Swal.fire({
+            title: '排隊抽獎中',
+            text: '目前使用欸噗較多，小精靈正在努力工作，需要稍等喔！',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }, 6000);
+
     try {
         const res = await fetch(CONFIG.API_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'draw', ...currentUser })
         });
-        
+
+        // 完成後清除所有排隊提示
+        clearTimeout(drawQueueTimer);
+        if (Swal.isVisible() && Swal.getTitle().innerText.includes('排隊')) {
+            Swal.close();
+        }
+
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
+
         const data = await res.json();
 
         setTimeout(() => {
@@ -129,27 +153,34 @@ async function startDraw() {
                 resultHtml += '</div>';
 
                 Swal.fire({
-                    title: '🎊 最終大獎出爐！',
+                    title: '🎊抽獎出爐🎊',
                     html: resultHtml,
                     icon: 'success',
                     confirmButtonText: '查看所有歷史結果',
                     confirmButtonColor: '#ff4757',
                     allowOutsideClick: false
                 }).then(() => {
-                    checkUser();
+                    // 如果後台有回傳最新歷史，直接顯示，避免再次連網連到「連線失敗」
+                    if (data.history) {
+                        showHistory(data.history);
+                    } else {
+                        checkUser();
+                    }
                 });
             } else {
                 Swal.fire('糟糕', data.message, 'error');
                 btn.disabled = false;
                 knob.style.transform = 'translateX(-50%) rotate(0deg)';
             }
-        }, 2500);
+        }, 1500);
     } catch (e) {
+        clearTimeout(drawQueueTimer);
+        if (Swal.isVisible()) Swal.close();
         console.error('Draw Error:', e);
         machine.classList.remove('shaking');
         btn.disabled = false;
         knob.style.transform = 'translateX(-50%) rotate(0deg)';
-        Swal.fire('系統異常', `連線發生錯誤: ${e.message}`, 'error');
+        Swal.fire('系統異常', '執行過程中發生阻礙', 'error');
     }
 }
 
@@ -157,7 +188,7 @@ function showHistory(history) {
     const drawSection = document.getElementById('draw-section');
     const historySection = document.getElementById('history-section');
     const list = document.getElementById('history-list');
-    
+
     if (drawSection) drawSection.classList.add('hidden');
     if (historySection) historySection.classList.remove('hidden');
 
@@ -168,15 +199,19 @@ function showHistory(history) {
         return;
     }
 
-    list.innerHTML = history.slice().reverse().map(h => `
-        <div class="history-card">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span style="font-weight: 700;">${h.itemName}</span>
-                <span style="font-size: 0.8rem; color: #a4b0be;">${new Date(h.time).toLocaleTimeString()}</span>
+    list.innerHTML = history.slice().reverse().map(h => {
+        const dateObj = new Date(h.time);
+        const timeStr = isNaN(dateObj.getTime()) ? '剛剛' : dateObj.toLocaleTimeString();
+        return `
+            <div class="history-card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-weight: 700;">${h.itemName}</span>
+                    <span style="font-size: 0.8rem; color: #a4b0be;">${timeStr}</span>
+                </div>
+                <div style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">
+                    ${h.option || h.result}
+                </div>
             </div>
-            <div style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">
-                ${h.option || h.result}
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }

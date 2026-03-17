@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扭蛋機動畫 - 旋鈕位置最終修正版</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        /* 機器主容器：比例符合 718x1200 */
+        .gacha-machine {
+            position: relative;
+            width: 350px;
+            height: 585px;
+        }
+
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 圖層順序設定 */
+        .layer-back  { z-index: 10; } /* body_back.svg */
+        .layer-ball  { z-index: 20; } /* ball.svg */
+        .layer-front { z-index: 30; pointer-events: none; } /* body_front.svg */
+
+        /* 旋鈕定位與大小修正 */
+        .controller-wrapper {
+            position: absolute;
+            z-index: 40;
+            /* 根據參考圖調整的位置座標 */
+            left: 14.5%; 
+            top: 62%;
+            width: 110px; /* 調整為參考圖合適的大小 */
+            height: 110px;
+            cursor: pointer;
+            /* 確保旋轉中心點對準 */
+            transform: translate(0, 0); 
+        }
+
+        .gacha-controller {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* --- 動畫定義 --- */
+
+        /* 1. 旋鈕原地旋轉動畫 */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .is-spinning .gacha-controller {
+            transform-origin: center; /* 確保獨立小圖繞中心轉動 */
+            animation: spin 1s ease-in-out forwards;
+        }
+
+        /* 2. 扭蛋球晃動動畫 */
+        @keyframes shake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .is-loading .layer-ball {
+            animation: shake 0.12s infinite;
+        }
+
+        .draw-btn {
+            margin-top: 30px;
+            padding: 12px 40px;
+            font-size: 18px;
+            color: white;
+            background-color: #ff5252;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px #d32f2f;
+        }
+        .draw-btn:active { transform: translateY(2px); box-shadow: 0 2px #d32f2f; }
+        .draw-btn:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="gacha-machine" id="gachaApp">
+        <img src="body_back.svg" class="layer layer-back">
+        
+        <img src="ball.svg" class="layer layer-ball">
+
+        <img src="body_front.svg" class="layer layer-front">
+
+        <div class="controller-wrapper" onclick="startGacha()">
+            <img src="controller.svg" class="gacha-controller" id="mainCtrl">
+        </div>
+    </div>
+
+    <button class="draw-btn" id="playBtn" onclick="startGacha()">開始扭蛋</button>
+
+    <script>
+        function startGacha() {
+            const app = document.getElementById('gachaApp');
+            const btn = document.getElementById('playBtn');
+            
+            if (app.classList.contains('is-spinning')) return;
+
+            // 執行旋轉與球體晃動動畫
+            app.classList.add('is-spinning', 'is-loading');
+            btn.disabled = true;
+
+            // 模擬動畫進行時間
+            setTimeout(() => {
+                app.classList.remove('is-loading');
+                
+                setTimeout(() => {
+                    app.classList.remove('is-spinning');
+                    btn.disabled = false;
+                    alert("抽獎完成！");
+                }, 500);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
