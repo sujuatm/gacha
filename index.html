@@ -30,9 +30,18 @@
         <div id="login-section">
             <div class="input-group">
                 <input type="text" id="orderId" placeholder="訂單編號（如：SJ0123456789）">
-                <input type="tel" id="phone" placeholder="驗證手機號碼避免太好玩被盜抽（？">
+                <input type="tel" id="phone" placeholder="驗證手機號碼，避免太好玩被盜抽（？">
             </div>
             <button onclick="checkUser()">進入抽獎</button>
+
+            <!-- 代購群資訊 -->
+            <div style="margin-top: 20px; font-size: 0.85rem; color: #888;">
+                <div style="font-weight: 700; color: #576574; margin-bottom: 4px;">Suju ATM | S&J代購群</div>
+                <a href="https://portaly.cc/suju_atm" target="_blank"
+                    style="color: var(--primary-color); text-decoration: none; border-bottom: 1px solid #74b9ff; padding-bottom: 1px;">
+                    https://portaly.cc/suju_atm
+                </a>
+            </div>
         </div>
 
         <div id="draw-section" class="hidden">
@@ -62,7 +71,7 @@
 
         <!-- 歷史紀錄與結果區 -->
         <div id="history-section" class="hidden">
-            <h3 style="color: var(--secondary-color); font-size: 1.2rem; margin-bottom: 1.5rem;">🎉扭蛋抽選紀錄🎉</h3>
+            <h3 style="color: var(--secondary-color); font-size: 1.2rem; margin-bottom: 1.5rem;">🎉扭蛋抽獎紀錄🎉</h3>
             <div id="history-list"></div>
             <button onclick="location.reload()"
                 style="background: var(--secondary-color); margin-top: 25px;">完成，返回首頁</button>

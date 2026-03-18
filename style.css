@@ -55,7 +55,7 @@ input {
 input:focus {
     border-color: var(--primary-color);
     background: white;
-    box-shadow: 0 0 0 4px rgba(255, 71, 87, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 197, 70, 0.949);
     outline: none;
 }
 
